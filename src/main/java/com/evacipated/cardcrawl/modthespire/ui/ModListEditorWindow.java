@@ -1,13 +1,20 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
+import com.evacipated.cardcrawl.modthespire.MinimalModInfo;
+import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.ModList;
+import com.evacipated.cardcrawl.modthespire.util.CompressionUtils;
+import com.google.gson.Gson;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.List;
 
 public class ModListEditorWindow extends JDialog
 {
@@ -164,7 +171,27 @@ public class ModListEditorWindow extends JDialog
         });
         // Export
         exportButton.addActionListener(e -> {
-            // TODO
+            // Get mods to export
+            List<ModInfo> modsToExport = owner.getSelectedMods();
+            if(modsToExport.isEmpty()){
+                ImportExportUI.openNoModsToExportWindow(this);
+                return;
+            }
+
+            // Convert them to their minimal data structure and serialize
+            List<MinimalModInfo> minimalModsToExport = MinimalModInfo.fromList(modsToExport);
+            String serializedList = CompressionUtils.compress(new Gson().toJson(minimalModsToExport));
+            if(serializedList == null){
+                ImportExportUI.openFailedSerializationExportWindow(this);
+                return;
+            }
+
+            // Copy modlist key to clipboard, show success window and ask to export to file.
+            StringSelection selection = new StringSelection(serializedList);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(selection, selection);
+
+            ImportExportUI.openSuccessfulExportWindow(this, serializedList);
         });
     }
 
