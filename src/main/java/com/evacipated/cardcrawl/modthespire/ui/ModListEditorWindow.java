@@ -5,6 +5,8 @@ import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.ModList;
 import com.evacipated.cardcrawl.modthespire.util.CompressionUtils;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import javafx.util.Pair;
 
 import javax.swing.*;
 import java.awt.*;
@@ -167,22 +169,31 @@ public class ModListEditorWindow extends JDialog
         });
         // Import
         importButton.addActionListener(e -> {
-            // TODO
+            String importedModKey = ImportExportUI.openImportWindow(owner);
+            if(importedModKey == null){
+                return;
+            }
+
+            Pair<String, List<MinimalModInfo>> modsToImport = new Gson().fromJson(CompressionUtils.decompress(importedModKey), new TypeToken<Pair<String, List<MinimalModInfo>>>(){}.getType());
+            if(modsToImport.getValue().isEmpty()){
+                JOptionPane.showMessageDialog(owner, "Failed to import modlist, modlist was empty.", "Failure", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
         });
         // Export
         exportButton.addActionListener(e -> {
             // Get mods to export
             List<ModInfo> modsToExport = owner.getSelectedMods();
             if(modsToExport.isEmpty()){
-                ImportExportUI.openNoModsToExportWindow(this);
+                JOptionPane.showMessageDialog(owner, "Failed to export modlist, no mods were selected.", "Failure", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             // Convert them to their minimal data structure and serialize
-            List<MinimalModInfo> minimalModsToExport = MinimalModInfo.fromList(modsToExport);
+            Pair<String, List<MinimalModInfo>> minimalModsToExport = new Pair<>(listList.getSelectedValue(), MinimalModInfo.fromList(modsToExport));
             String serializedList = CompressionUtils.compress(new Gson().toJson(minimalModsToExport));
             if(serializedList == null){
-                ImportExportUI.openFailedSerializationExportWindow(this);
+                JOptionPane.showMessageDialog(owner, "Failed to export modlist, could not serialize the modlist.", "Failure", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
