@@ -1125,8 +1125,4 @@ public class ModSelectWindow extends JFrame
             }
         }
     }
-
-    public List<ModInfo> getSelectedMods(){
-        return modList.getCheckedModInfos();
-    }
 }

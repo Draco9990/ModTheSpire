@@ -183,14 +183,15 @@ public class ModListEditorWindow extends JDialog
         // Export
         exportButton.addActionListener(e -> {
             // Get mods to export
-            List<ModInfo> modsToExport = owner.getSelectedMods();
+            ModList modlistToExport = new ModList(listList.getSelectedValue());
+            List<ModInfo> modsToExport = modlistToExport.toModInfos();
             if(modsToExport.isEmpty()){
                 JOptionPane.showMessageDialog(owner, "Failed to export modlist, no mods were selected.", "Failure", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             // Convert them to their minimal data structure and serialize
-            Pair<String, List<MinimalModInfo>> minimalModsToExport = new Pair<>(listList.getSelectedValue(), MinimalModInfo.fromList(modsToExport));
+            Pair<String, List<MinimalModInfo>> minimalModsToExport = new Pair<>(modlistToExport.getName(), MinimalModInfo.fromList(modsToExport));
             String serializedList = CompressionUtils.compress(new Gson().toJson(minimalModsToExport));
             if(serializedList == null){
                 JOptionPane.showMessageDialog(owner, "Failed to export modlist, could not serialize the modlist.", "Failure", JOptionPane.ERROR_MESSAGE);
