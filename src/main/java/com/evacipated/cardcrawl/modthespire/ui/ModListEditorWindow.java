@@ -4,6 +4,7 @@ import com.evacipated.cardcrawl.modthespire.MinimalModInfo;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.ModList;
 import com.evacipated.cardcrawl.modthespire.util.CompressionUtils;
+import com.evacipated.cardcrawl.modthespire.ImportUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import javafx.util.Pair;
@@ -30,11 +31,15 @@ public class ModListEditorWindow extends JDialog
     private JButton importButton;
     private JButton exportButton;
 
+    private ModSelectWindow owner;
+
     private final DefaultListModel<String> listModel;
 
     public ModListEditorWindow(ModSelectWindow owner)
     {
         super(owner, "Mod Lists", true);
+        this.owner = owner;
+
         setContentPane(contentPane);
         setModal(true);
 
@@ -107,10 +112,7 @@ public class ModListEditorWindow extends JDialog
                         prevName = s;
                         continue;
                     } else {
-                        listModel.addElement(s);
-                        listList.setSelectedValue(s, true);
-                        ModList.save(s, new File[0]);
-                        owner.updateProfilesList();
+                        createNewModList(s);
                     }
                 }
                 break;
@@ -179,6 +181,14 @@ public class ModListEditorWindow extends JDialog
                 JOptionPane.showMessageDialog(owner, "Failed to import modlist, modlist was empty.", "Failure", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+
+            String modlistName = findUniqueModlistName(modsToImport.getKey());
+            createNewModList(modlistName);
+
+            List<File> mods = ImportUtils.reconcileMods(this, modsToImport.getValue());
+            ModList.save(modlistName, mods.toArray(new File[0]));
+
+            owner.swapModList(modlistName);
         });
         // Export
         exportButton.addActionListener(e -> {
@@ -205,6 +215,33 @@ public class ModListEditorWindow extends JDialog
 
             ImportExportUI.openSuccessfulExportWindow(this, serializedList);
         });
+    }
+
+    private String findUniqueModlistName(String modlistName){
+        if(!listModel.contains(modlistName)){
+            return modlistName;
+        }
+
+        int currentDuplicationIndex = 1;
+        while(true){
+            String modlistNameCopy = modlistName + "_" + currentDuplicationIndex;
+            if(!listModel.contains(modlistNameCopy)){
+                return modlistNameCopy;
+            }
+            currentDuplicationIndex++;
+        }
+    }
+
+    private void createNewModList(String modlistName){
+        // Sanity check
+        if(listModel.contains(modlistName)){
+            return;
+        }
+
+        listModel.addElement(modlistName);
+        listList.setSelectedValue(modlistName, true);
+        ModList.save(modlistName, new File[0]);
+        owner.updateProfilesList();
     }
 
     private void onClose()

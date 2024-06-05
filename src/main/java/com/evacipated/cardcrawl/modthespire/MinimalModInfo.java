@@ -29,6 +29,20 @@ public class MinimalModInfo implements Serializable {
     }
 
     /**
+     * @return : Mod id.
+     */
+    public String getModId() {
+        return modId;
+    }
+
+    /**
+     * @return : Mod steam id.
+     */
+    public Long getSteamId() {
+        return steamId;
+    }
+
+    /**
      * Converts a list of mod infos to minimal mod infos.
      * @param modInfos : List of mod infos to convert to minimal mod infos.
      * @return : A list of minimal mod infos of the provided full mod infos.

@@ -680,6 +680,15 @@ public class ModSelectWindow extends JFrame
         }
     }
 
+    public void swapModList(String listToLoad){
+        // Sanity check
+        if (listToLoad == null){
+            return;
+        }
+
+        profilesList.setSelectedItem(listToLoad);
+    }
+
     private void setPlayButtonLabel()
     {
         playBtn.setText(

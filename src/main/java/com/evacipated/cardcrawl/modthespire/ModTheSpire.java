@@ -890,4 +890,22 @@ public class ModTheSpire
             e.printStackTrace();
         }
     }
+
+    public static File[] getModFiles(){
+        File[] modFiles = new File[ALLMODINFOS.length];
+        for (int i = 0; i < ALLMODINFOS.length; ++i) {
+            if (ALLMODINFOS[i].jarURL == null) {
+                System.err.println("ERROR: jarURL is null?: " + ALLMODINFOS[i].Name);
+                continue;
+            }
+            try {
+                modFiles[i] = new File(ALLMODINFOS[i].jarURL.toURI());
+            } catch (URISyntaxException e) {
+                System.err.println("Problem with: " + ALLMODINFOS[i].jarURL);
+                e.printStackTrace();
+            }
+        }
+
+        return modFiles;
+    }
 }

@@ -144,7 +144,7 @@ public class ModList
     {
         model.clear();
 
-        File[] modFiles = toFiles(info);
+        File[] modFiles = ModTheSpire.getModFiles();
 
         List<ModDescriptor> loadOrder = new ArrayList<>();
         List<Integer> foundMods = new ArrayList<>();
@@ -193,7 +193,7 @@ public class ModList
         ModInfo[] infos = ModTheSpire.ALLMODINFOS;
 
         // Find all mod files.
-        File[] modFiles = toFiles(infos);
+        File[] modFiles = ModTheSpire.getModFiles();
 
         // Get all mods and add checked ones to the list
         List<ModInfo> modInfos = new ArrayList<>();
@@ -206,29 +206,6 @@ public class ModList
         }
 
         return modInfos;
-    }
-
-    public File[] toFiles(ModInfo[] infos){
-        if(infos == null){
-            System.err.println("Could not convert modlist to file list, provided mod infos were null.");
-            return new File[0];
-        }
-
-        File[] modFiles = new File[infos.length];
-        for (int i = 0; i < infos.length; ++i) {
-            if (infos[i].jarURL == null) {
-                System.err.println("ERROR: jarURL is null?: " + infos[i].Name);
-                continue;
-            }
-            try {
-                modFiles[i] = new File(infos[i].jarURL.toURI());
-            } catch (URISyntaxException e) {
-                System.err.println("Problem with: " + infos[i].jarURL);
-                e.printStackTrace();
-            }
-        }
-
-        return modFiles;
     }
 
     public static void save(String list, File[] modFiles)
