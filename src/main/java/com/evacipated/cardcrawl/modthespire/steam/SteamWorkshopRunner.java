@@ -4,9 +4,7 @@ import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,22 +13,41 @@ import java.util.concurrent.TimeUnit;
 
 public class SteamWorkshopRunner
 {
-    private static Process p;
+    private static Process apiProcess;
 
-    private static void startSteamAPI() throws IOException
+    // Output to process
+    private static OutputStream outputStreamWriter;
+    private static PrintWriter processWriter;
+
+    // Input from process
+    private static InputStream inputStreamReader;
+    private static Scanner scanner;
+
+    private static void startAPI() throws IOException
     {
-        if (p != null) return;
+        if (apiProcess != null) {
+            // API is already active
+            return;
+        }
 
-        String path = SteamWorkshop.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        path = URLDecoder.decode(path,  "utf-8");
-        path = new File(path).getPath();
+        String apiPath = SteamWorkshop.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+        apiPath = URLDecoder.decode(apiPath,  "utf-8");
+        apiPath = new File(apiPath).getPath();
+
         ProcessBuilder pb = new ProcessBuilder(
             SteamSearch.findJRE(),
-            "-cp", path + File.pathSeparatorChar + ModTheSpire.STS_JAR,
+            "-cp", apiPath + File.pathSeparatorChar + ModTheSpire.STS_JAR,
             "com.evacipated.cardcrawl.modthespire.steam.SteamWorkshop"
         ).redirectError(ProcessBuilder.Redirect.INHERIT);
-        p = pb.start();
-        Runtime.getRuntime().addShutdownHook(new Thread(p::destroy));
+
+        apiProcess = pb.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(apiProcess::destroy));
+
+        outputStreamWriter = apiProcess.getOutputStream();
+        processWriter = new PrintWriter(outputStreamWriter, true);
+
+        inputStreamReader = apiProcess.getInputStream();
+        scanner = new Scanner(inputStreamReader);
     }
 
     public static List<SteamSearch.WorkshopInfo> findWorkshopInfos()
@@ -38,12 +55,15 @@ public class SteamWorkshopRunner
         List<SteamSearch.WorkshopInfo> workshopInfos = new ArrayList<>();
         try {
             System.out.println("Searching for Workshop items...");
-            startSteamAPI();
-            Scanner scanner = new Scanner(p.getInputStream()).useDelimiter("\0");
+            startAPI();
+
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-            String result = scanner.next();
+            processWriter.println("workshop_infos");
+
+            String result = scanner.nextLine();
             SteamData steamData = gson.fromJson(result, SteamData.class);
+
             System.out.println(gson.toJson(steamData));
 
             ModTheSpire.LWJGL3_ENABLED = ModTheSpire.LWJGL3_ENABLED || steamData.steamDeck;
@@ -58,24 +78,41 @@ public class SteamWorkshopRunner
         return workshopInfos;
     }
 
-    public static void stop()
+    public static void stopAPI()
     {
-        if (p == null) {
-            throw new IllegalStateException();
+        if (apiProcess == null) {
+            // API not active
+            return;
         }
 
-        if (p.isAlive()) {
+        if (apiProcess.isAlive()) {
             try {
-                OutputStreamWriter writer = new OutputStreamWriter(p.getOutputStream());
-                writer.write("quit\0");
-                writer.flush();
-                if (!p.waitFor(100, TimeUnit.MILLISECONDS)) {
-                    p.destroy();
+                processWriter.println("quit");
+                if (!apiProcess.waitFor(100, TimeUnit.MILLISECONDS)) {
+                    apiProcess.destroy();
                 }
-            } catch (IOException | InterruptedException ignored) {
-                p.destroy();
+            } catch (Exception ignored) {
+                apiProcess.destroy();
             }
         }
-        p = null;
+        apiProcess = null;
+
+        tryCloseCloseable(outputStreamWriter);
+        tryCloseCloseable(processWriter);
+        tryCloseCloseable(inputStreamReader);
+        tryCloseCloseable(scanner);
+
+        outputStreamWriter = null;
+        processWriter = null;
+        inputStreamReader = null;
+        scanner = null;
+    }
+
+    private static void tryCloseCloseable(Closeable c){
+        if(c != null) {
+            try{
+                c.close();
+            }catch (Exception ignored){}
+        }
     }
 }
