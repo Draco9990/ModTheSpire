@@ -1,7 +1,10 @@
 package com.evacipated.cardcrawl.modthespire.steam;
 
 import com.codedisaster.steamworks.*;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class SteamWorkshop
@@ -52,11 +55,17 @@ public class SteamWorkshop
 
             try {
                 if(System.in.available() > 0){
-                    String command = scanner.next();
-                    System.err.println(command);
+                    String command = scanner.nextLine();
                     switch (command){
                         case "workshop_infos":
-                            new UGCQuery();
+                            new UGCQueryRequest();
+                            break;
+                        case "subscribe_and_download":
+                            String toDownload = scanner.nextLine();
+                            List<Long> toDownloadIds = new Gson().fromJson(toDownload, new TypeToken<List<Long>>(){}.getType());
+                            if(!toDownloadIds.isEmpty()){
+                                new SubscribeAndDownloadRequest(toDownloadIds);
+                            }
                             break;
                         case "quit":
                             System.exit(0);

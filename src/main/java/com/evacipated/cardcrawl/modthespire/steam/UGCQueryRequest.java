@@ -6,13 +6,13 @@ import com.google.gson.Gson;
 import java.util.Arrays;
 import java.util.Collection;
 
-class UGCQuery implements SteamUGCCallback {
+class UGCQueryRequest implements SteamUGCCallback {
     private SteamUGC workshop;
     private SteamData data;
 
     private int resultsReceived = 0;
 
-    public UGCQuery(){
+    public UGCQueryRequest(){
         data = new SteamData();
 
         // Check if we're running on steamdeck

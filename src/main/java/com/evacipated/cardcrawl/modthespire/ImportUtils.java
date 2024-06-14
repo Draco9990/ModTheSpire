@@ -1,5 +1,7 @@
 package com.evacipated.cardcrawl.modthespire;
 
+import com.evacipated.cardcrawl.modthespire.steam.SteamWorkshopRunner;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -44,7 +46,7 @@ public class ImportUtils {
             // For all missing non-downloadable mods notify the user.
             String cantDownloadMsg = "Following mods are missing but can not be downloaded:\n";
             for(MinimalModInfo minimalModInfo : missingModsNoDownload){
-                cantDownloadMsg += "* " + minimalModInfo.getModId() + "\n";
+                cantDownloadMsg += "• " + minimalModInfo.getModId() + "\n";
             }
             cantDownloadMsg += "\nPlease download those mods manually.";
 
@@ -54,8 +56,8 @@ public class ImportUtils {
         if(!modsToDownload.isEmpty()){
             // For all missing downloadable mods, prompt the user to download.
             String downloadMsg = "Following mods are missing:\n";
-            for(MinimalModInfo minimalModInfo : missingModsNoDownload){
-                downloadMsg += "* " + minimalModInfo.getModId() + "\n";
+            for(MinimalModInfo minimalModInfo : modsToDownload){
+                downloadMsg += "• " + minimalModInfo.getModId() + "\n";
             }
             downloadMsg += "\nWould you like download them?";
 
@@ -73,8 +75,8 @@ public class ImportUtils {
             );
 
             if(result == 0){
-                // The user has chosen to download the mods, download them.
-                // TODO
+                //Attempt to download the given mods
+                SteamWorkshopRunner.downloadMods(owner, modsToDownload);
             }
         }
 
