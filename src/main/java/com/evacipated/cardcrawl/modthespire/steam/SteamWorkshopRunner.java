@@ -151,6 +151,8 @@ public class SteamWorkshopRunner
             //Hang until disposed
             downloadWindow.setVisible(true);
 
+            ModTheSpire.refreshMods();
+
             return resultVal[0];
         }catch (IOException e){
             e.printStackTrace();
