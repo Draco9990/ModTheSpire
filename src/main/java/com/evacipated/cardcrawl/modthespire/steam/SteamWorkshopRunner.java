@@ -21,11 +21,9 @@ public class SteamWorkshopRunner
     private static Process apiProcess;
 
     // Output to process
-    private static OutputStream outputStreamWriter;
     private static PrintWriter processWriter;
 
     // Input from process
-    private static InputStream inputStreamReader;
     private static Scanner scanner;
 
     private static void startAPI() throws IOException
@@ -48,10 +46,10 @@ public class SteamWorkshopRunner
         apiProcess = pb.start();
         Runtime.getRuntime().addShutdownHook(new Thread(apiProcess::destroy));
 
-        outputStreamWriter = apiProcess.getOutputStream();
+        OutputStream outputStreamWriter = apiProcess.getOutputStream();
         processWriter = new PrintWriter(outputStreamWriter, true);
 
-        inputStreamReader = apiProcess.getInputStream();
+        InputStream inputStreamReader = apiProcess.getInputStream();
         scanner = new Scanner(inputStreamReader);
     }
 
@@ -180,22 +178,18 @@ public class SteamWorkshopRunner
         }
         apiProcess = null;
 
-        tryCloseCloseable(outputStreamWriter);
-        tryCloseCloseable(processWriter);
-        tryCloseCloseable(inputStreamReader);
-        tryCloseCloseable(scanner);
-
-        outputStreamWriter = null;
-        processWriter = null;
-        inputStreamReader = null;
-        scanner = null;
-    }
-
-    private static void tryCloseCloseable(Closeable c){
-        if(c != null) {
+        if(processWriter != null) {
             try{
-                c.close();
+                processWriter.close();
             }catch (Exception ignored){}
         }
+        processWriter = null;
+
+        if(scanner != null) {
+            try{
+                scanner.close();
+            }catch (Exception ignored){}
+        }
+        scanner = null;
     }
 }
